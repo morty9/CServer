@@ -14,12 +14,9 @@ int main(int argc, char *argv[]) {
 	int sockfd; /* socket */
   int size = 1024; /* default size */
   int port = 8888; /* port number */
-  int n, m;
+  int n;
 	char buffer[size]; /* Buffer who send file */
 	struct sockaddr_in sockaddr_server; /* server addr */
-
-  char message[size];
-  char* msg;
 
 	/* CREATE SOCKET */
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -41,8 +38,15 @@ int main(int argc, char *argv[]) {
     printf("[CLIENT] Connected to server on port %d\n\n", port);
   }
 
-  while (1) {
+  while ((n = read(sockfd, buffer, sizeof(buffer)-1)) > 0) {
+    buffer[n] = 0;
+    fflush(stdin);
+    printf("%s",buffer);
+  }
 
+  if(n < 0)
+  {
+      printf("\n [CLIENT] Read error \n");
   }
 
   printf("[CLIENT] Connection lost.\n");

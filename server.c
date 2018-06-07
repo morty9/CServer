@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
 
   /* VARIABLES */
   int sockfd;
+  int new_sockfd;
   int size = 512;
   int port = 8888;
   unsigned int sockfd_size;
@@ -46,11 +47,19 @@ int main(int argc, char *argv[]) {
     printf ("[SERVER] Listening on port %d.\n", port);
   }
 
-  while(1) {
+  sockfd_size = sizeof(struct sockaddr_in);
+  while((new_sockfd = accept(sockfd, (struct sockaddr *)&sockaddr_client, &sockfd_size))) {
 
-    printf("[SERVER] Connection accepted for client\n");
+    printf("[SERVER] Connection accepted for client %d\n", new_sockfd);
 
   }
 
+  if (new_sockfd < 0) {
+      printf("[SERVER] Failed to accept connection\n");
+      return 1;
+  }
+
+  close(sockfd);
+  close(new_sockfd);
 
 }
