@@ -15,9 +15,10 @@ int main(int argc, char *argv[]) {
 
 	/* VARIABLES */
 	int sockfd; /* socket */
-  int n;
+  int n, m;
 	char buffer[BUFFSIZE]; /* Buffer who send file */
 	struct sockaddr_in sockaddr_server; /* server addr */
+  char message[BUFFSIZE];
 
 	/* CREATE SOCKET */
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -36,13 +37,20 @@ int main(int argc, char *argv[]) {
 	if (connect(sockfd, (struct sockaddr *)&sockaddr_server, sizeof(struct sockaddr)) == -1) {
     printf("[ERROR] Failed to connect to remote\n");
 	} else {
-    printf("[CLIENT] Connected to server on port %d\n\n", PORT);
+    printf("[CLIENT] Connected to server on port %d\n", PORT);
   }
 
   while ((n = read(sockfd, buffer, sizeof(buffer)-1)) > 0) {
     buffer[n] = 0;
     fflush(stdin);
     printf("%s",buffer);
+
+    fgets(message, BUFFSIZE, stdin);
+    if(send(sockfd, message, sizeof(message), 0) < 0) {
+        printf("[ERROR] Failed to sent data.\n");
+        break;
+    }
+
   }
 
   if(n < 0)

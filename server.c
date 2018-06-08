@@ -95,6 +95,7 @@ void *connection_handler(void *socket)
     int sock = *(int*)socket;
     int read_size;
     char *message;
+    char msg[BUFFSIZE];
     char client_message[BUFFSIZE];
 
     //Send some messages to the client
@@ -102,6 +103,26 @@ void *connection_handler(void *socket)
 		if(write(sock , message , strlen(message)) < 0) {
 				printf("[ERROR] Failed to sent message.\n");
 		}
+
+    while( (read_size = read(sock , client_message , sizeof(client_message))) > 0 ) {
+				if (strlen(client_message) == 0) {
+            printf("[SERVER] error message is empty\n");
+						break ;
+				}
+
+        printf("[CLIENT] Response: %s\n|END OF RESPONSE|\n", client_message);
+
+        sprintf(msg, "[SERVER] I received : %s", client_message);
+        write(sock, msg, strlen(msg));
+
+    }
+
+    if(read_size == 0) {
+        printf("[CLIENT] Client disconnected\n");
+        fflush(stdout);
+    } else if(read_size == -1) {
+        printf("[CLIENT] Read failed\n");
+    }
 
     //Free the socket pointer
     free(socket);
