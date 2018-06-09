@@ -29,8 +29,7 @@
 
 char* getRequestType(char* request){
 
-    char* tmp = malloc(sizeof(char) * strlen(request));
-    strcpy(tmp, request);
+    char* tmp = strdup(request);
 
     char* info = strtok(tmp, " ");
     return info;
@@ -40,8 +39,7 @@ char* getRequestType(char* request){
 
 char* getHost(char* request){
 
-    char* tmp = malloc(sizeof(char) * strlen(request));
-    strcpy(tmp, request);
+    char* tmp = strdup(request);
 
     char* info = strtok(tmp, " ");
     int match = 0;
@@ -66,8 +64,7 @@ char* getHost(char* request){
 
 char* getType(char* request){
 
-    char* tmp = malloc(sizeof(char) * strlen(request));
-    strcpy(tmp, request);
+    char* tmp = strdup(request);
 
     char* info = strtok(tmp, " ");
     int match = 0;
@@ -90,8 +87,7 @@ char* getType(char* request){
 
 
 char* getFileTitle(char* request){
-    char* tmp = malloc(sizeof(char) * strlen(request));
-    strcpy(tmp, request);
+    char* tmp = strdup(request);
 
     char* info = strtok(tmp, " ");
 
@@ -117,8 +113,7 @@ char* getFileTitle(char* request){
 
 char* getContent(char* request){
 
-    char* tmp = malloc(sizeof(char) * strlen(request));
-    strcpy(tmp, request);
+    char* tmp = strdup(request);
 
     char* info = strtok(tmp, " ");
     int match = 0;
@@ -147,7 +142,6 @@ char* getContent(char* request){
             cont = strdup(&request[i]);
             cont[strlen(cont) - 1] = '\0';
             return cont;
-            return info;
         }
     }
 
