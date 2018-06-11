@@ -99,7 +99,7 @@ char* getFileTitle(char* request){
 
         if(strcmp(info, "Type:") == 0){
             info = strtok(NULL, " ");
-            
+
             if(strcmp(info, "File") != 0){
                 return NULL;
             }
@@ -147,7 +147,6 @@ char* getContent(char* request){
             cont = strdup(&request[i]);
             cont[strlen(cont) - 1] = '\0';
             return cont;
-            return info;
         }
     }
 
@@ -168,5 +167,5 @@ char* getContent(char* request){
     char* requestContentV2 = "GET /?Type=Data&Content=azert HTTP/1.1";
     char* requestFileV2 = "GET /?Type=File&FileTitle=test.txt&Content=zertyuio HTTP/1.1";
 
-    
+
 }*/

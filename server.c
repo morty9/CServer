@@ -105,6 +105,7 @@ void *connection_handler(void *socket)
 		}
 
     while( (read_size = read(sock , client_message , sizeof(client_message))) > 0 ) {
+        printf("SOCK SERVER %d\n", sock);
 				if (strlen(client_message) == 0) {
             printf("[SERVER] error message is empty\n");
 						break ;
