@@ -166,7 +166,3 @@ void lmConnectionError(int src){
 void lmThreadCreation(int src){
     errorMessageBody(src, "Could not create thread.");
 }
-
-int main(){
-    lmFileSent(Client, "filename.zip");
-}
