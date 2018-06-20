@@ -71,7 +71,6 @@ int main(int argc, char *argv[]) {
 
     //Now join the thread , so that we dont terminate before the thread
     //pthread_join( sniffer_thread , NULL);
-    fflush(stdin);
     printf("[SERVER] Handler assigned to client %d\n", new_sockfd);
 
   }

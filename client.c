@@ -10,7 +10,7 @@
 #include "tools/HTTPRequestManager.h"
 
 int sendFile(char*, int, char*);
-void sendData(char*, int);
+void sendData(char*, int, char*);
 
 typedef enum { false = 0, true = !false } bool;
 
@@ -25,7 +25,9 @@ int main(int argc, char *argv[]) {
 	char buffer[BUFFSIZE]; /* Buffer who send file */
 	struct sockaddr_in sockaddr_server; /* server addr */
   char message[BUFFSIZE];
-  char* post = "POST HTTP/1.1 Host: www.google.fr Type: %s FileTitle: %s Content: \"%s\"";
+  char* postFile = "POST HTTP/1.1 Host: www.google.fr Type: %s FileTitle: %s Content: \"%s\"";
+	char* postData = "POST HTTP/1.1 Host: www.google.fr Type: %s Content: \"%s\"";
+	char* get = "GET HTTP/1.1 Host: www.google.fr Type: %s Content: \"%s\"";
 
 	/* CREATE SOCKET */
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -53,9 +55,9 @@ int main(int argc, char *argv[]) {
     printf("%s",buffer);
 
     if (scanf("%s", message) != 0) {
-      if (sendFile(message, sockfd, post) == false){
+      if (sendFile(message, sockfd, postFile) == false){
           printf("THIS IS A DATA\n");
-          sendData(message, sockfd);
+          sendData(message, sockfd, postData);
       }
     }
 
@@ -70,14 +72,22 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void sendData(char* message, int sockfd) {
-  if(send(sockfd, message, sizeof(message), 0) < 0) {
+void sendData(char* message, int sockfd, char* postData) {
+	char* type = "Data";
+	printf("Size post data %lu\n", sizeof(postData));
+	printf("Size type %lu\n", sizeof(type));
+	printf("Size message %lu\n", sizeof(message));
+	int size = sizeof(postData) + sizeof(type) + sizeof(message);
+	sprintf(message, postData, "Data", message);
+	printf("Message data %s\n", message);
+	printf("Message Size %d\n", size);
+  if(send(sockfd, message, size , 0) < 0) {
       printf("[ERROR] Failed to sent data.\n");
   }
   message = "";
 }
 
-int sendFile(char* message, int sockfd, char* post) {
+int sendFile(char* message, int sockfd, char* postFile) {
 
   char file_buffer[BUFFSIZE];
   char* file_name = message;
@@ -95,7 +105,7 @@ int sendFile(char* message, int sockfd, char* post) {
   while((file_size = fread(file_buffer, sizeof(char), BUFFSIZE, file_to_send)) > 0) {
       char* file_title;
       sprintf(file_title, "%s", file_name);
-      sprintf(message, post, "File", file_title, file_buffer);
+      sprintf(message, postFile, "File", file_title, file_buffer);
       printf("MESSAGE %s\n", message);
       if(send(sockfd, message, BUFFSIZE, 0) < 0) {
           printf("[ERROR] Failed to sent file %s.\n", file_name);
