@@ -31,7 +31,7 @@ void messageBody(int src, int success, char* successMsg, char* errorMsg){
     char* header = headerMessage(src);
     strcat(message, header);
 
-    if(success == 0){
+    if(success == Success){
         strcat(message, "[ERROR] ");
         strcat(message, errorMsg);
     } else {
@@ -78,9 +78,7 @@ void lmCreateSocket(int src, int success){
 
 void lmConnectToServer(int src, int success, int port){
     char* tmp = malloc(sizeof(char) * 64);
-
     sprintf(tmp, "Connected to server on port %d.", port);
-
     messageBody(src, success, tmp, "Failed to connect to remote.");
     free(tmp);
 }
@@ -99,36 +97,28 @@ void lmSendDataFail(int src){
 
 void lmSendingFile(int src, char* filename){
     char* tmp = malloc(sizeof(char) * 256);
-    
     sprintf(tmp, "Sending %s to the server ...", filename);
-
     successMessageBody(src, tmp);
     free(tmp);
 }
 
 void lmFileNotFound(int src, char* filename) {
     char* tmp = malloc(sizeof(char) * 256);
-    
     sprintf(tmp, "File %s not found.", filename);
-
     errorMessageBody(src, tmp);
     free(tmp);
 }
 
 void lmSendFileError(int src, char* filename){
     char* tmp = malloc(sizeof(char) * 256);
-    
     sprintf(tmp, "Failed to sent file %s.", filename);
-
     errorMessageBody(src, tmp);
     free(tmp);
 }
 
 void lmFileSent(int src, char* filename){
     char* tmp = malloc(sizeof(char) * 256);
-    
     sprintf(tmp, "File %s was sent!", filename);
-
     successMessageBody(src, tmp);
     free(tmp);
 }
@@ -144,6 +134,37 @@ void lmBind(int src, int success, char* address, int port){
 
     free(errorMsg);
     free(successMsg);
+}
+
+void lmListen(int src, int success, int port){
+    char* successMsg = malloc(sizeof(char) * 256);
+    char* errorMsg = malloc(sizeof(char) * 256);
+
+    sprintf(successMsg, "Listening on port %d.", port);
+    sprintf(errorMsg, "Failed to listen on port %d.", port);
+
+    messageBody(src, success, successMsg, errorMsg);
+
+    free(errorMsg);
+    free(successMsg);
+}
+
+void lmConnectionSuccess(int src, int socket){
+    char* successMsg = malloc(sizeof(char) * 256);
+    sprintf(successMsg, "Connection accepted for client %d", socket);
+    successMessageBody(src, successMsg);
+    free(successMsg);
+}
+
+void lmConnectionError(int src){
+    char* errorMsg = malloc(sizeof(char) * 256);
+    sprintf(errorMsg, "Failed to accept connection");
+    errorMessageBody(src, errorMsg);
+    free(errorMsg);
+}
+
+void lmThreadCreation(int src){
+    errorMessageBody(src, "Could not create thread.");
 }
 
 int main(){

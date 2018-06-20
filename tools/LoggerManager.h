@@ -37,4 +37,16 @@ void lmFileSent(int src, char* filename);
 // Bind
 void lmBind(int src, int success, char* address, int port);
 
+// Listen
+void lmListen(int src, int success, int port);
+
+// Connection success
+void lmConnectionSuccess(int src, int socket);
+
+// Connection error
+void lmConnectionError(int src);
+
+// Thread creation
+void lmThreadCreation(int src);
+
 #endif
