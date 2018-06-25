@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   char message[BUFFSIZE];
   char* postFile = "POST HTTP/1.1 Host: www.google.fr Type: %s FileTitle: %s Content: \"%s\"";
 	char* postData = "POST HTTP/1.1 Host: www.google.fr Type: %s Content: \"%s\"";
-	char* get = "GET HTTP/1.1 Host: www.google.fr FileTitle: %s";
+	char* get = "GET HTTP/1.1 Host: www.google.fr Type: %s FileTitle: %s";
 
 	/* CREATE SOCKET */
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -90,10 +90,10 @@ int main(int argc, char *argv[]) {
 
 void getDataFromServer(char* message, int sockfd, char* get) {
 
-	char* messageToSend = malloc(sizeof(char));
-	char* type = "Data";
+	char* messageToSend = malloc(strlen(message) + strlen(get) +1);
+	char* type = "File";
 
-	sprintf(messageToSend, get, message);
+	sprintf(messageToSend, get, type, message);
 	printf("Message to get %s\n", messageToSend);
 
   if(send(sockfd, messageToSend, strlen(messageToSend) , 0) < 0) {
@@ -147,7 +147,6 @@ int sendFile(char* message, int sockfd, char* postFile) {
       bzero(file_buffer, sizeof(file_buffer));
 
   }
-
 
   printf("[STATUS] Ok File %s from Client was Sent!\n", file_name);
   message = "";
