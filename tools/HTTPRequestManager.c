@@ -110,19 +110,15 @@ char* getFileTitle(char* request){
     return NULL;
 }
 
+/*char* getContent(char* request){
 
-char* getContent(char* request){
-
-    char* tmp = strdup(request);
+    char* tmp = malloc(sizeof(char) * strlen(request));
+    strcpy(tmp, request);
 
     char* info = strtok(tmp, " ");
     int match = 0;
-    int i = 0;
 
     char* type;
-    char* cont;
-
-    type = malloc(sizeof(char) * 500);
 
     while (info != NULL)
     {
@@ -136,13 +132,64 @@ char* getContent(char* request){
         }
 
         info = strtok(NULL, " ");
-        i += strlen(info) + 1;
 
-        if(match) {
+        if(match){
+            if(strcmp(type, "Data") == 0){
+                memmove(info, info+1, strlen(info));
+
+                info = strcat(info, " ");
+                info = strcat(info, strtok(NULL, "\0"));
+                info[strlen(info) - 1] = '\0';
+
+                return info;
+            } else if(strcmp(type, "File") == 0) {
+                memmove(info, info+1, strlen(info));
+
+                info = strcat(info, " ");
+                info = strcat(info, strtok(NULL, "\0"));
+                info[strlen(info) - 1] = '\0';
+
+                return info;
+            }
+        }
+    }
+
+    return NULL;
+}*/
+
+
+char* getContent(char* request){
+
+    char* tmp = strdup(request);
+
+    char* info = strtok(tmp, " ");
+    int match = 0;
+    int i = strlen(info) + 1;
+
+    char* type;
+    char* cont;
+
+    type = malloc(sizeof(char) * 500);
+
+    while (info != NULL)
+    {
+
+        if(strcmp(info, "Content:") == 0){
+            info = strtok(NULL, " ");
+            i += strlen(info) + 3;
             cont = strdup(&request[i]);
             cont[strlen(cont) - 1] = '\0';
             return cont;
         }
+
+        if(strcmp(info, "Type:") == 0){
+            info = strtok(NULL, " ");
+            strcpy(type, info);
+        }
+
+        info = strtok(NULL, " ");
+        i += strlen(info) + 1;
+
     }
 
     return NULL;

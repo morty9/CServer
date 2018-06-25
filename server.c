@@ -5,11 +5,13 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <pthread.h>
+#include "tools/HTTPRequestManager.h"
 
 #define BUFFSIZE 1024 /* default size */
 #define PORT 8888 /* port number */
 
 void *connection_handler(void *socket);
+void responseTreatment(char* response);
 
 int main(int argc, char *argv[]) {
 
@@ -112,9 +114,11 @@ void *connection_handler(void *socket)
 
         printf("[CLIENT] Response: %s\n|END OF RESPONSE|\n", client_message);
 
-        sprintf(msg, "[SERVER] I received : %s", client_message);
-        write(sock, msg, strlen(msg));
+        responseTreatment(client_message);
 
+        printf("\n\nMMMMSSGGGGG %s\n\n", msg);
+        sprintf(msg, "[SERVER] I received : %s", client_message);
+        write(sock, msg, sizeof(msg));
     }
 
     if(read_size == 0) {
@@ -128,4 +132,13 @@ void *connection_handler(void *socket)
     free(socket);
 
     return 0;
+}
+
+void responseTreatment(char* response) {
+
+  printf("METHOD: %s\n", getRequestType(response));
+  printf("TYPE: %s\n", getType(response));
+  printf("FILE TITLE: %s\n", getFileTitle(response));
+  printf("CONTENT: %s\n", getContent(response));
+
 }
