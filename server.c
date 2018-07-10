@@ -8,16 +8,28 @@
 #include <signal.h>
 #include "tools/HTTPRequestManager.h"
 
-#define BUFFSIZE 2048 /* default size */
+#define BUFFSIZE 4096 /* default size */
 #define PORT 8888 /* port number */
+
+#define CODE_OK = "200 OK"
+#define CODE_CREATED = "201 CREATED"
+#define CODE_MOVED = "301 MOVED PERMANENTLY"
+#define CODE_FOUND = "302 FOUND"
+#define CODE_BAD_REQUEST = "400 BAD REQUEST"
+#define CODE_FORBIDDEN = "403 FORBIDDEN"
+#define CODE_NOT_FOUND = "404 NOT FOUND"
+#define CODE_NOT_ALLOWED = "405 METHOD NOT ALLOWED"
+#define CODE_INTERNAL_ERROR = "500 INTERNAL ERROR"
+#define CODE_BAD_GETAWAY = "502 BAD GATEWAY"
+#define CODE_UNAVAILABLE = "503 SERVICE UNAVAILABLE"
 
 typedef enum { false = 0, true = !false } bool;
 
 void *connection_handler(void *);
 void responseTreatment(char* , void *);
 bool receive_file(char*, char*);
-//bool sendFile(char* file_title, int sockfd);
-bool sendFile(char* file_title, void *socket);
+bool sendFile(char* file_title, void* sockfd);
+//char* sendFile(char* file_title, void *socket);
 void handlerSignal(int sig);
 
 int sockfd;
@@ -160,21 +172,17 @@ void responseTreatment(char* response, void *socket) {
   char* message;
   int sock = *(int*)socket;
 
-  printf("METHOD: %s\n", getRequestType(response));
-  printf("FILE REQUESTED: %s\n", getFileNameRequested(response, getRequestType(response)));
-  printf("CONTENT FILE %s", getContentFileRequested(response));
-  //printf("TYPE: %s\n", getType(response));
-  //printf("FILE TITLE: %s\n", getFileTitle(response));
-  //printf("CONTENT: %s\n", getContent(response));
-
   char* method = getRequestType(response);
   char* fileNameRequested = getFileNameRequested(response, method);
   char* contentFileRequested = getContentFileRequested(response);
+
+  printf("CONTENT: %s\n", contentFileRequested);
 
   if (strcmp(getRequestType(response), "POST") == 0) {
 
     //if (strcmp(getType(response), "File") == 0) {
       bool isReceived = receive_file(fileNameRequested, contentFileRequested);
+      //char* response = receive_file(fileNameRequested, contentFileRequested);
       if (isReceived == true) {
         message = "[SERVER] File received\n";
         write(sock, message, strlen(message));
@@ -183,15 +191,19 @@ void responseTreatment(char* response, void *socket) {
 
   } else if (strcmp(getRequestType(response), "GET") == 0) {
       bool isSend = sendFile(getFileNameRequested(response, method), socket);
+      //char* isSend = sendFile(getFileNameRequested(response, method), socket);
+
   }
 
+  free(method);
+  free(contentFileRequested);
   close(sock);
 }
 
 bool receive_file(char* file_title, char* file_content) {
   puts("[SERVER] RECEIVE FILE FUNCTION");
 
-  //printf("FILE TITLE %s\n", file_title);
+  printf("FILE CONTENT %s\n", file_content);
 
   //char* received_file = "received.txt";
   char* folder = "./received_files/";
