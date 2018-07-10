@@ -4,20 +4,33 @@
 
 /*int findWord(char* request, char* word)*/
 
+// Get name of file requested
+char* getFileNameRequested(char*, char*);
+
+char* getContentFileRequested(char*);
+
+char* getBoundary(char*);
+
+char* getContentBetweenBoundary(char*, char*);
+
+size_t getHeaderInfo(char*, char**);
+
+char  *getSubRequest(char*, char*);
+
 // Get type of the HTTP request
-char* getRequestType(char* request);
+char* getRequestType(char*);
 
 // Get URL of the request
-char* getHost(char* request);
+char* getHost(char*);
 
 // Get type of content from request
-char* getType(char* request);
+char* getType(char*);
 
 // Get File Title from request
-char* getFileTitle(char* request);
+char* getFileTitle(char*);
 
 // Get content from request
-char* getContent(char* request);
+char* getContent(char*);
 
 
 #endif

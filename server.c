@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <signal.h>
 #include "tools/HTTPRequestManager.h"
 
 #define BUFFSIZE 2048 /* default size */
@@ -15,13 +16,16 @@ typedef enum { false = 0, true = !false } bool;
 void *connection_handler(void *);
 void responseTreatment(char* , void *);
 bool receive_file(char*, char*);
-bool sendFile(char* file_title, int sockfd);
+//bool sendFile(char* file_title, int sockfd);
+bool sendFile(char* file_title, void *socket);
+void handlerSignal(int sig);
+
+int sockfd;
+int new_sockfd;
 
 int main(int argc, char *argv[]) {
 
   /* VARIABLES */
-  int sockfd;
-  int new_sockfd;
   int* new_socket;
   unsigned int sockfd_size;
   struct sockaddr_in sockaddr_client; /* client addr */
@@ -62,6 +66,8 @@ int main(int argc, char *argv[]) {
   sockfd_size = sizeof(struct sockaddr_in);
   while((new_sockfd = accept(sockfd, (struct sockaddr *)&sockaddr_client, &sockfd_size))) {
 
+    signal(SIGINT, handlerSignal);
+
     printf("[SERVER] Connection accepted for client %d\n", new_sockfd);
 
     //Thread creation
@@ -86,8 +92,18 @@ int main(int argc, char *argv[]) {
       return 1;
   }
 
+  //free(new_socket);
   close(sockfd);
   close(new_sockfd);
+}
+
+void handlerSignal(int sig) {
+
+  if (sig == SIGINT) {
+    close(sockfd);
+    close(new_sockfd);
+    kill(getpid(), SIGKILL);
+  }
 
 }
 
@@ -109,16 +125,16 @@ void *connection_handler(void *socket)
 				printf("[ERROR] Failed to sent message.\n");
 		}
 
-    while( (read_size = read(sock , client_message , sizeof(client_message))) > 0 ) {
+    while( (read_size = read(sock , client_message , BUFFSIZE)) > 0 ) {
 
-				if (sizeof(client_message) == 0) {
+				if (strlen(client_message) == 0) {
             printf("[SERVER] error message is empty\n");
 						break ;
 				}
 
-        printf("\n[CLIENT] Response: %s\n|END OF RESPONSE|\n", client_message);
+        printf("\n[SERVER] Client Response: %s\n|END OF RESPONSE|\n", client_message);
 
-        //responseTreatment(client_message, socket);
+        responseTreatment(client_message, socket);
 
         //printf("\n\nMMMMSSGGGGG %s\n\n", msg);
         //sprintf(msg, "[SERVER] I received : %s", client_message);
@@ -126,57 +142,65 @@ void *connection_handler(void *socket)
     }
 
     if(read_size == 0) {
-        printf("[CLIENT] Client disconnected\n");
+        printf("[SERVER] Client disconnected\n");
         fflush(stdout);
     } else if(read_size == -1) {
-        printf("[CLIENT] Read failed\n");
+        printf("[SERVER] Nothing to read\n");
     }
 
     //Free the socket pointer
     free(socket);
-
+    close(sock);
     return 0;
 }
 
 void responseTreatment(char* response, void *socket) {
 
+  //printf("RESPONSE %s\n", response);
   char* message;
   int sock = *(int*)socket;
 
-  /*printf("METHOD: %s\n", getRequestType(response));
-  printf("TYPE: %s\n", getType(response));
-  printf("FILE TITLE: %s\n", getFileTitle(response));
-  printf("CONTENT: %s\n", getContent(response));*/
+  printf("METHOD: %s\n", getRequestType(response));
+  printf("FILE REQUESTED: %s\n", getFileNameRequested(response, getRequestType(response)));
+  printf("CONTENT FILE %s", getContentFileRequested(response));
+  //printf("TYPE: %s\n", getType(response));
+  //printf("FILE TITLE: %s\n", getFileTitle(response));
+  //printf("CONTENT: %s\n", getContent(response));
+
+  char* method = getRequestType(response);
+  char* fileNameRequested = getFileNameRequested(response, method);
+  char* contentFileRequested = getContentFileRequested(response);
 
   if (strcmp(getRequestType(response), "POST") == 0) {
 
-    if (strcmp(getType(response), "File") == 0) {
-      bool isReceived = receive_file(getFileTitle(response), getContent(response));
+    //if (strcmp(getType(response), "File") == 0) {
+      bool isReceived = receive_file(fileNameRequested, contentFileRequested);
       if (isReceived == true) {
         message = "[SERVER] File received\n";
         write(sock, message, strlen(message));
       }
-    }
+    //}
 
   } else if (strcmp(getRequestType(response), "GET") == 0) {
-      if (strcmp(getType(response), "File") == 0) {
-        printf("TEST");
-        bool isSend = sendFile(getFileTitle(response), sock);
-      }
+      bool isSend = sendFile(getFileNameRequested(response, method), socket);
   }
 
+  close(sock);
 }
 
 bool receive_file(char* file_title, char* file_content) {
   puts("[SERVER] RECEIVE FILE FUNCTION");
+
+  //printf("FILE TITLE %s\n", file_title);
 
   //char* received_file = "received.txt";
   char* folder = "./received_files/";
   char* result_path = malloc(strlen(folder)+strlen(file_title)+1);
   strcpy(result_path, folder);
   strcat(result_path, file_title);
+  //printf("\nFILE PATH %s\n", result_path);
 
-  FILE *rFile = fopen(result_path, "a");
+  FILE *rFile = fopen(result_path, "wb");
 
   if(rFile == NULL) {
     printf("[ERROR] File %s can't be open by the server.\n", file_title);
@@ -204,21 +228,29 @@ bool receive_file(char* file_title, char* file_content) {
     return false;
 }
 
-bool sendFile(char* file_title, int sockfd) {
+//bool sendFile(char* file_title, int sockfd) {
+bool sendFile(char* file_title, void *socket) {
 
-  printf("SEND FILE FUNCTION\n");
+  char* header = "HTTP/1.0 200 OK\r\nContent-Length: %d\r\nContent-Type: %s\r\n\r\n%s";
+
+  int sock = *(int*) socket;
+  //char* request = "HTTP/1.1 200 OK\nContent-Type:text/html; charset=UTF-8\nVary: Accept-Encoding\n\n";
+
+  //printf("SEND FILE FUNCTION\n");
 
   char file_buffer[BUFFSIZE];
   //char* file_name = message;
-  char* folder = "./received_files/";
-  char* result_path = malloc(strlen(folder)+strlen(file_title)+1);
-  strcpy(result_path, folder);
+  //char* folder = "./received_files/";
+  //char* result_path = malloc(strlen(folder)+strlen(file_title)+1);
+  char* result_path = malloc(strlen(file_title));
   strcat(result_path, file_title);
-  printf("FILE PATH %s\n", result_path);
+  //strcpy(result_path, folder);
+  //strcat(result_path, file_title);
+  //printf("FILE PATH %s\n", result_path);
 
   printf("[CLIENT] Sending %s to the Client...\n", file_title);
 
-  FILE *file_to_send = fopen(result_path, "r");
+  FILE *file_to_send = fopen(result_path, "rb");
   if(file_to_send == NULL) {
     printf("[ERROR] File %s not found.\n", file_title);
     return false;
@@ -226,20 +258,24 @@ bool sendFile(char* file_title, int sockfd) {
 
   bzero(file_buffer, sizeof(file_buffer));
   int file_size;
+
   while((file_size = fread(file_buffer, sizeof(char), BUFFSIZE, file_to_send)) > 0) {
-      //char* file_title;
-      //sprintf(file_title, "%s", file_title);
-      //sprintf(message, postFile, "File", file_title, file_buffer);
-      //printf("MESSAGE %s\n", message);
-      if(send(sockfd, file_buffer, strlen(file_buffer), 0) < 0) {
+      //char* requestToSend = malloc(strlen(request)+strlen(file_buffer) + 1);
+      //strcpy(requestToSend, request);
+      //strcat(requestToSend, file_buffer);
+      printf("MESSAGE %s\n", file_buffer);
+      if(send(sock, file_buffer, strlen(file_buffer), 0) < 0) {
           printf("[ERROR] Failed to sent file %s.\n", file_title);
           break;
       }
-      bzero(file_buffer, sizeof(file_buffer));
-
   }
+  fclose(file_to_send);
 
   printf("[STATUS] Ok File %s from Client was Sent!\n", file_title);
-  //message = "";
+
+  free(result_path);
+  close(sock);
+  //free(requestToSend);
+
   return true;
 }

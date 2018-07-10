@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "tools/HTTPRequestManager.h"
+#include "tools/Base64.h";
 
 int sendFile(char*, int, char*);
 void sendData(char*, int, char*);

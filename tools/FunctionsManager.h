@@ -1,5 +1,0 @@
-#ifndef FUNCTIONS_MANAGER
-#define FUNCTIONS_MANAGER
-
-
-#endif
