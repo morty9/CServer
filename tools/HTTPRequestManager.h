@@ -4,6 +4,12 @@
 
 /*int findWord(char* request, char* word)*/
 
+char* getExtensionFile(char*);
+
+char* responseServerRequest(char*, char*, char*, char*);
+
+char* getFileContentType(char*);
+
 // Get name of file requested
 char* getFileNameRequested(char*, char*);
 
@@ -16,6 +22,8 @@ char* getContentBetweenBoundary(char*, char*);
 size_t getHeaderInfo(char*, char**);
 
 char  *getSubRequest(char*, char*);
+
+char* getContentType(char*);
 
 // Get type of the HTTP request
 char* getRequestType(char*);
