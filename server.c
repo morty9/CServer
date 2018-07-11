@@ -6,54 +6,31 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
+#include "server.h"
 #include "tools/HTTPRequestManager.h"
-
-#define BUFFSIZE 4096 /* default size */
-#define PORT 8888 /* port number */
-
-#define CODE_OK "200 OK"
-#define CODE_CREATED "201 CREATED"
-#define CODE_MOVED "301 MOVED PERMANENTLY"
-#define CODE_FOUND "302 FOUND"
-#define CODE_BAD_REQUEST "400 BAD REQUEST"
-#define CODE_FORBIDDEN "403 FORBIDDEN"
-#define CODE_NOT_FOUND "404 NOT FOUND"
-#define CODE_NOT_ALLOWED "405 METHOD NOT ALLOWED"
-#define CODE_INTERNAL_ERROR "500 INTERNAL ERROR"
-#define CODE_BAD_GETAWAY "502 BAD GATEWAY"
-#define CODE_UNAVAILABLE "503 SERVICE UNAVAILABLE"
+#include "tools/LoggerManager.h"
 
 typedef enum { false = 0, true = !false } bool;
-
-void *connectionHandler(void *);
-void responseTreatment(char* , void *);
-//bool receiveFile(char*, char*);
-char* receiveFile(char* fileTitle, char* fileContent, char* contentType);
-//bool sendFile(char* fileTitle, void *socket, char* contentType);
-char* sendFile(char* fileTitle, void *socket, char* contentType);
-void handlerSignal(int sig);
 
 int   sockfd;
 int   newSockfd;
 int*  newSocket;
+struct sockaddr_in sockaddrClient;
 
-int main(int argc, char *argv[]) {
+int socketCreator() {
 
-  /* VARIABLES */
-  unsigned int  sockfdSize;
-  char          buffer[BUFFSIZE]; /* Buffer who received file */
-  //char*         message;
-
-  struct sockaddr_in sockaddrClient; /* client addr */
-  //struct sockaddr_in sockaddr_server; /* server addr */
-
-  /* CREATE SOCKET */
-  if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1 ) {
-    printf("[ERROR] Could not create socket\n");
-    exit(1);
+  if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    lmCreateSocket(0, 0);
+    return 1;
   } else {
-    printf("[CLIENT] Socket created sucessfully\n");
+    lmCreateSocket(0, 1);
   }
+
+  return 0;
+
+}
+
+void socketInitialization() {
 
   /* INITIALISATION OF SOCKADDR_CLIENT STRUCTURE */
   bzero(&sockaddrClient, sizeof(sockaddrClient));
@@ -61,21 +38,44 @@ int main(int argc, char *argv[]) {
   sockaddrClient.sin_port = htons(PORT); // Port
   sockaddrClient.sin_addr.s_addr = INADDR_ANY; // Address
 
-  /* BIND */
-  if( bind(sockfd, (struct sockaddr*)&sockaddrClient, sizeof(struct sockaddr)) == -1 ) {
+}
+
+int socketBinding() {
+
+  if (bind(sockfd, (struct sockaddr*)&sockaddrClient, sizeof(struct sockaddr)) < 0 ) {
     printf("[ERROR] Failed to bind\n");
-    exit(1);
+    return 1;
   } else {
     printf("[SERVER] Bind success, port: %d, address: 127.0.0.1\n",PORT);
   }
 
-  /* LISTEN */
+  return 0;
+
+}
+
+int socketListening() {
+
   if(listen(sockfd,3) == -1) {
     printf("[ERROR] Failed to listen on port %d\n", PORT);
-    exit(1);
+    return 1;
   } else {
     printf ("[SERVER] Listening on port %d.\n", PORT);
   }
+
+  return 0;
+
+}
+
+int main(int argc, char *argv[]) {
+
+  /* VARIABLES */
+  unsigned int  sockfdSize;
+  char          buffer[BUFFSIZE]; /* Buffer who received file */
+
+  socketCreator();
+  socketInitialization();
+  socketBinding();
+  socketListening();
 
   sockfdSize = sizeof(struct sockaddr_in);
   while((newSockfd = accept(sockfd, (struct sockaddr *)&sockaddrClient, &sockfdSize))) {
@@ -198,7 +198,7 @@ void responseTreatment(char* response, void *socket) {
   if (isResponse) {
     isResponse = false;
     if(send(sock, responseServer, strlen(responseServer), 0) < 0) {
-        printf("[ERROR] Failed to sent file %s.\n", fileNameRequested);
+        printf("[ERROR] Failed to send file %s.\n", fileNameRequested);
     }
   }
 
@@ -239,7 +239,7 @@ char* receiveFile(char* fileTitle, char* fileContent, char* contentType) {
         printf("[STATUS] Ok received file %s from client!\n", fileTitle);
       }
 
-      response = responseServerRequest(CODE_OK, " ", " ", fileTitle);
+      response = responseServerRequest(CODE_OK, "Your file has been sent", " ", fileTitle);
       fclose(rFile);
       return response;
     }
