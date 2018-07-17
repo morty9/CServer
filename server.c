@@ -20,11 +20,11 @@ struct sockaddr_in sockaddrClient;
 int socketCreator() {
 
   if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    lmCreateSocket(0, 0);
+    lmCreateSocket(Server, Error);
     return 1;
-  } else {
-    lmCreateSocket(0, 1);
   }
+
+  lmCreateSocket(Server, Success);
 
   return 0;
 
@@ -43,10 +43,10 @@ void socketInitialization() {
 int socketBinding() {
 
   if (bind(sockfd, (struct sockaddr*)&sockaddrClient, sizeof(struct sockaddr)) < 0 ) {
-    lmBind(0, 0, NULL, 0);
+    lmBind(Server, Error, "", PORT);
     return 1;
   } else {
-    lmBind(0, 1, "127.0.0.1", PORT);
+    lmBind(Server, Success, "127.0.0.1", PORT);
   }
 
   return 0;
@@ -56,14 +56,13 @@ int socketBinding() {
 int socketListening() {
 
   if(listen(sockfd,3) == -1) {
-    printf("[ERROR] Failed to listen on port %d\n", PORT);
+    lmListen(Server, Error, PORT);
     return 1;
-  } else {
-    printf ("[SERVER] Listening on port %d.\n", PORT);
   }
 
-  return 0;
+  lmListen(Server, Success, PORT);
 
+  return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -82,7 +81,7 @@ int main(int argc, char *argv[]) {
 
     signal(SIGINT, handlerSignal);
 
-    lmConnectionSuccess(0, sockfd);
+    lmConnectionSuccess(Success, sockfd);
 
     //Thread creation
     pthread_t sniffer_thread;
@@ -90,18 +89,17 @@ int main(int argc, char *argv[]) {
     *newSocket = newSockfd;
 
     //Thread connection handler
-    if( pthread_create( &sniffer_thread , NULL ,  connectionHandler , (void*) newSocket) < 0){
-        printf("[SERVER] Could not create thread\n");
+    if(pthread_create( &sniffer_thread , NULL ,  connectionHandler , (void*) newSocket) < 0){
+        lmThreadCreation(Server);
         return 1;
     }
 
-    printf("[SERVER] Handler assigned to client %d\n", newSockfd);
+    printf("[SERVER] Handler assigned to client %d\n", newSockfd);   
 
   }
 
   if (newSockfd < 0) {
-      //printf("[SERVER] Failed to accept connection\n");
-      lmConnectionError(0);
+      lmConnectionError(Server);
       return 1;
   }
 
@@ -139,7 +137,6 @@ void *connectionHandler(void *socket) {
         printf("\n[SERVER] Client Response: %s\n|END OF RESPONSE|\n", clientMessage);
 
         responseTreatment(clientMessage, socket);
-
     }
 
     if(readSize == 0) {
@@ -199,7 +196,7 @@ void responseTreatment(char* response, void *socket) {
   if (isResponse) {
     isResponse = false;
     if(send(sock, responseServer, strlen(responseServer), 0) < 0) {
-        printf("[ERROR] Failed to send file %s.\n", fileNameRequested);
+        lmSendFileError(Server, fileNameRequested);
     }
   }
 
@@ -219,7 +216,6 @@ char* receiveFile(char* fileTitle, char* fileContent, char* contentType) {
   FILE *rFile = fopen(resultPath, "wb");
 
   if(rFile == NULL) {
-
     printf("[ERROR] File %s can't be open by the server.\n", fileTitle);
     return responseServerRequest(CODE_NOT_FOUND, "File not found", " ", fileTitle);
 
@@ -265,11 +261,11 @@ char* sendFile(char* fileTitle, void *socket, char* contentType) {
     return NULL;
   }
 
-  printf("[CLIENT] Sending %s to the Client...\n", fileTitle);
+  lmSendingFile(Server, fileTitle);
 
   FILE *fileToSend = fopen(resultPath, "rb");
   if(fileToSend == NULL) {
-    printf("[ERROR] File %s not found.\n", fileTitle);
+    lmFileNotFound(Server, fileTitle);
     return responseServerRequest(CODE_NOT_FOUND, "File not found", " ", fileTitle);
   }
 
