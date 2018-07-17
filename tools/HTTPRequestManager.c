@@ -7,7 +7,8 @@
 
 typedef enum { false = 0, true = !false } bool;
 
-char* responseServerRequest(char* responseCode, char* bodyContent, char* contentType, char* FileName) {
+
+char* responseServerRequest(char* responseCode, char* bodyContent, char* contentType, char* fileName) {
 
   printf("BODY %s\n", bodyContent);
 
@@ -16,16 +17,6 @@ char* responseServerRequest(char* responseCode, char* bodyContent, char* content
   if (responseCode == NULL) {
     return NULL;
   }
-
-  /*if (bodyContent == NULL) {
-    bodyContent = malloc(1);
-    strcpy(bodyContent, "\0");
-  }
-
-  if (contentType == NULL) {
-    contentType = malloc(10);
-    strcpy(contentType, "text/plain");
-  }*/
 
   char* result = malloc(strlen(format) + strlen(responseCode) + strlen(bodyContent) + strlen(contentType) +1);
 
@@ -66,17 +57,15 @@ char* getFileContentType(char* fileName) {
 
   extension = getExtensionFile(fileName);
 
-  printf("EXTENSION %s\n", extension);
-
   if (strcmp(extension, "txt") == 0 || strcmp(extension, "rtf") == 0) {
     type = "text/plain";
   } else if (strcmp(extension, "json") == 0) {
     type = "application/json";
   } else if (strcmp(extension, "html") == 0) {
     type = "text/html";
+  } else if (strcmp(extension, "png") == 0) {
+    type = "application/octet-stream";
   }
-
-  printf("TYPE %s\n", type);
 
   return type;
 }

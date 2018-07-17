@@ -31,7 +31,7 @@ void messageBody(int src, int success, char* successMsg, char* errorMsg){
     char* header = headerMessage(src);
     strcat(message, header);
 
-    if(success == Success){
+    if(success == Error){
         strcat(message, "[ERROR] ");
         strcat(message, errorMsg);
     } else {

@@ -43,10 +43,10 @@ void socketInitialization() {
 int socketBinding() {
 
   if (bind(sockfd, (struct sockaddr*)&sockaddrClient, sizeof(struct sockaddr)) < 0 ) {
-    printf("[ERROR] Failed to bind\n");
+    lmBind(0, 0, NULL, 0);
     return 1;
   } else {
-    printf("[SERVER] Bind success, port: %d, address: 127.0.0.1\n",PORT);
+    lmBind(0, 1, "127.0.0.1", PORT);
   }
 
   return 0;
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 
     signal(SIGINT, handlerSignal);
 
-    printf("[SERVER] Connection accepted for client %d\n", newSockfd);
+    lmConnectionSuccess(0, sockfd);
 
     //Thread creation
     pthread_t sniffer_thread;
@@ -100,7 +100,8 @@ int main(int argc, char *argv[]) {
   }
 
   if (newSockfd < 0) {
-      printf("[SERVER] Failed to accept connection\n");
+      //printf("[SERVER] Failed to accept connection\n");
+      lmConnectionError(0);
       return 1;
   }
 
