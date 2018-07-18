@@ -16,6 +16,7 @@ int   sockfd;
 int   newSockfd;
 int*  newSocket;
 struct sockaddr_in sockaddrClient;
+pthread_t sniffer_thread;
 
 int socketCreator() {
 
@@ -84,8 +85,6 @@ int main(int argc, char *argv[]) {
 
     printf("[SERVER] Connection accepted for client %d\n", newSockfd);
 
-    //Thread creation
-    pthread_t sniffer_thread;
     newSocket = malloc(1);
     *newSocket = newSockfd;
 
@@ -94,6 +93,8 @@ int main(int argc, char *argv[]) {
         printf("[SERVER] Could not create thread\n");
         return 1;
     }
+
+    pthread_detach(sniffer_thread);
 
     printf("[SERVER] Handler assigned to client %d\n", newSockfd);
 
@@ -113,6 +114,7 @@ void handlerSignal(int sig) {
   if (sig == SIGINT) {
     close(sockfd);
     close(newSockfd);
+    pthread_exit(&sniffer_thread);
     kill(getpid(), SIGKILL);
   }
 

@@ -17,16 +17,6 @@ char* responseServerRequest(char* responseCode, char* bodyContent, char* content
     return NULL;
   }
 
-  /*if (bodyContent == NULL) {
-    bodyContent = malloc(1);
-    strcpy(bodyContent, "\0");
-  }
-
-  if (contentType == NULL) {
-    contentType = malloc(10);
-    strcpy(contentType, "text/plain");
-  }*/
-
   char* result = malloc(strlen(format) + strlen(responseCode) + strlen(bodyContent) + strlen(contentType) +1);
 
   sprintf(result, format, responseCode, contentType, bodyContent);
@@ -84,6 +74,10 @@ char* getFileContentType(char* fileName) {
 char* getRequestType(char* request) {
     size_t  i;
     bool    found = false;
+
+    if (request == NULL) {
+      return NULL;
+    }
 
     i = 0;
     while (request[i] && request[i] != ' ') {
@@ -212,6 +206,10 @@ char*  getSubRequest(char* body, char* boundary) {
   size_t  blen;
   int     count = 2;
 
+  if (body == NULL || boundary == NULL) {
+    return 0;
+  }
+
   i = 0;
   blen = strlen(boundary);
 
@@ -249,6 +247,7 @@ char* getContentFileRequested(char* request) {
   }
 
   if (boundary != NULL) {
+    printf("IN \n");
     subRequest = getSubRequest(request + i, boundary);
     free(boundary);
     return getContentFileRequested(subRequest);
